@@ -22,7 +22,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	buf := make([]byte, 1024)
+
 	for {
+		_, err := conn.Read(buf)
+		if err != nil {
+			break
+		}
+
 		conn.Write([]byte("+PONG\r\n"))
 	}
 }
