@@ -23,6 +23,6 @@ func main() {
 	}
 
 	for {
-		conn.Write([]byte("+PONG!\r\n"))
+		conn.Write([]byte("+PONG\r\n"))
 	}
 }
