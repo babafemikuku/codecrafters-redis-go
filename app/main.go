@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -15,24 +16,25 @@ import (
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	scanner := bufio.NewScanner(conn)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		withoutcrlf := strings.Split(line, "\r\n")
-
-		arguments := []string{}
-		for i, str := range withoutcrlf[1:] {
-			arguments[i] = strings.ReplaceAll(str, "$", "")
+	reader := bufio.NewReader(conn)
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			break
 		}
 
-		if strings.ToUpper(arguments[0]) == "ECHO" {
-			strLen := len(arguments[1])
-			resp := fmt.Sprintf("$%d\r\n%s\r\n", strLen, arguments[1])
-			conn.Write([]byte(resp))
+		if len(line) < 2 {
+			break
 		}
 
-		conn.Write([]byte("+PONG\r\n"))
+		line = strings.TrimSuffix(line, "\r\n")
+		if line[0] == '*' {
+			arrNum := strings.TrimPrefix(line, "*")
+			count, err := strconv.Atoi(arrNum)
+			if err != nil {
+				break
+			}
+		}
 	}
 }
 
