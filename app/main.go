@@ -10,7 +10,7 @@ import (
 )
 
 // Client sends commands to the Redis server as RESP arrays
-// "*3\r\n$3\r\nSET\r\n$4\r\nuser\r\n$5\r\nalice"
+// "*3\r\n $3\r\n SET\r\n$4\r\nuser\r\n$5\r\nalice"
 // ["*3", "$3SET", "$4user", "$5alice"]
 
 func handleConnection(conn net.Conn) {
@@ -28,11 +28,40 @@ func handleConnection(conn net.Conn) {
 		}
 
 		line = strings.TrimSuffix(line, "\r\n")
+
 		if line[0] == '*' {
-			arrNum := strings.TrimPrefix(line, "*")
-			count, err := strconv.Atoi(arrNum)
+			argNum := strings.TrimPrefix(line, "*")
+			count, err := strconv.Atoi(argNum)
 			if err != nil {
 				break
+			}
+
+			var args []string
+			for range count {
+				argLenLine, err := reader.ReadString('\n')
+				if err != nil {
+					break
+				}
+				argLenLine = strings.TrimSuffix(argLenLine, "\r\n")
+				if argLenLine[0] != '$' {
+					break
+				}
+
+				argLen := strings.TrimPrefix(argLenLine, "$")
+
+				_, err = strconv.Atoi(argLen)
+				if err != nil {
+					break
+				}
+
+				arg, err := reader.ReadString('\n')
+				if err != nil {
+					break
+				}
+
+				arg = strings.TrimSuffix(arg, "\r\n")
+
+				args = append(args, arg)
 			}
 		}
 	}
